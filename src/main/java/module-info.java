@@ -1,4 +1,7 @@
-module org.openjfx {
+module com.openjfx {
     requires javafx.controls;
-    exports org.openjfx;
+    requires org.controlsfx.controls;
+    exports com.openjfx;
+    exports com.openjfx.timer;
+    exports com.openjfx.scheduler;
 }
