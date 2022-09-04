@@ -4,11 +4,14 @@ import com.openjfx.scheduler.PomodoroScheduler;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
+import javafx.scene.control.DatePicker;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 import org.controlsfx.control.Notifications;
 
-public class Timer extends Pane {
+import java.time.LocalDate;
+
+public class Timer extends Pane implements PomodoroTimer {
 
     private int seconds;
     private boolean isCurrentRoundWork;
@@ -20,11 +23,13 @@ public class Timer extends Pane {
 
     private TimerLayout timerLayout;
 
+
     public Timer(int workingMinutes, int smallPauseMinutes, int longPauseMinutes,
                  PomodoroScheduler pomodoroScheduler) {
-        this.pomodoroScheduler=pomodoroScheduler;
-        numberOfBreaks=0;
-        isCurrentRoundWork=true;
+
+        this.pomodoroScheduler = pomodoroScheduler;
+        numberOfBreaks = 0;
+        isCurrentRoundWork = true;
         //*60
         initialWorkingSeconds = workingMinutes;
         initialSmallPauseSeconds = smallPauseMinutes;
@@ -32,7 +37,7 @@ public class Timer extends Pane {
         seconds = workingMinutes;
         //
 
-        this.timerLayout=new TimerLayout(getTimeLabelValue(),getNumberOfPomodorosValue());
+        this.timerLayout = new TimerLayout(getTimeLabelValue(), getDatePicker());
         this.getChildren().addAll(timerLayout);
     }
 
@@ -60,43 +65,57 @@ public class Timer extends Pane {
         setListenersOnButtons(timerTimeline);
     }
 
-
-
-    private void notifyUser(){
-        String workOrBreak=isCurrentRoundWork?"work":"break";
+    @Override
+    public void notifyUser() {
+        String workOrBreak = isCurrentRoundWork ? "work" : "break";
         Notifications.create()
                 .title("Info")
-                .text("The "+workOrBreak+" is over")
+                .text("The " + workOrBreak + " is over")
                 .showInformation();
     }
-    private void switchBetweenWorkAndPause(){
-        if (isCurrentRoundWork){
-            pomodoroScheduler.incrementNumberOfPomodoros();
-            timerLayout.setPomodoroNumberLabelValue(getNumberOfPomodorosValue());
-            System.out.println("now break");
-            isCurrentRoundWork=false;
-            numberOfBreaks++;
-            seconds=numberOfBreaks>=4?initialLongPauseSeconds:initialSmallPauseSeconds;
-            if (numberOfBreaks>=4){
-                numberOfBreaks=0;
-            }
-        }
-        else{
-            System.out.println("now work");
-            isCurrentRoundWork=true;
-            seconds=initialWorkingSeconds;
-        }
-    }
-    private String getTimeLabelValue(){
-        String breakOrWork=isCurrentRoundWork?"Work: ":"Break: ";
-        return breakOrWork+ seconds;
-        //return breakOrWork+String.format("%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
-    }
-    private String getNumberOfPomodorosValue(){
-        return "Number of pomodoros today: " + pomodoroScheduler.getNumberOfPomodoros();
+
+
+    private DatePicker getDatePicker() {
+        var datePicker = new DatePicker();
+        datePicker.setOnAction((event) -> {
+            LocalDate date = datePicker.getValue();
+            int numberOfPomodoros = pomodoroScheduler.getNumberOfPomodoros(date);
+            setNumberOfPomodorosLabelValue(numberOfPomodoros);
+
+        });
+
+        return datePicker;
     }
 
-    private void setListenersOnButtons(Timeline timerTimeline){
+
+    private void switchBetweenWorkAndPause() {
+        if (isCurrentRoundWork) {
+            pomodoroScheduler.incrementNumberOfPomodoros();
+            System.out.println("now break");
+            isCurrentRoundWork = false;
+            numberOfBreaks++;
+            seconds = numberOfBreaks >= 4 ? initialLongPauseSeconds : initialSmallPauseSeconds;
+            if (numberOfBreaks >= 4) {
+                numberOfBreaks = 0;
+            }
+        } else {
+            System.out.println("now work");
+            isCurrentRoundWork = true;
+            seconds = initialWorkingSeconds;
+        }
+    }
+
+    private String getTimeLabelValue() {
+        String breakOrWork = isCurrentRoundWork ? "Work: " : "Break: ";
+        return breakOrWork + seconds;
+        //return breakOrWork+String.format("%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
+    }
+
+    private void setNumberOfPomodorosLabelValue(int num) {
+        timerLayout.setPomodoroNumberLabelValue("Number of pomodoros: " + num);
+    }
+
+    private void setListenersOnButtons(Timeline timerTimeline) {
         timerLayout.getStartButton().setOnAction(actionEvent -> timerTimeline.play());
         timerLayout.getPauseButton().setOnAction(actionEvent -> timerTimeline.stop());
         timerLayout.getRestartButton().setOnAction(actionEvent -> {
@@ -108,7 +127,6 @@ public class Timer extends Pane {
             numberOfBreaks = 0;
 
             pomodoroScheduler.resetNumberOfPomodoros();
-            timerLayout.setTimeLabelValue(getNumberOfPomodorosValue());
             timerLayout.setTimeLabelValue(getTimeLabelValue());
             timerTimeline.setCycleCount(seconds);
             timerTimeline.play();
