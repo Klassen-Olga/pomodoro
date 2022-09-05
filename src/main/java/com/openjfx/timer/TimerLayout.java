@@ -9,6 +9,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class TimerLayout extends StackPane {
+
     private Label timeLabel;
     private Button startButton;
     private Button pauseButton;

@@ -7,17 +7,18 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-/**
- * JavaFX App
- */
 public class App extends Application {
+
+    final int workingMinutes=90;
+    final int smallPauseMinutes=5;
+    final int longPauseMinutes=15;
 
     private PomodoroScheduler midnightScheduler = new MidnightScheduler();
 
     @Override
     public void start(Stage stage) {
 
-        var timer = new Timer(2, 4, 6, midnightScheduler);
+        var timer = new Timer(workingMinutes, smallPauseMinutes, longPauseMinutes, midnightScheduler);
         timer.run();
 
         var scene = new Scene(timer);

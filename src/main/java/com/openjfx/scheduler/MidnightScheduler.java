@@ -1,5 +1,9 @@
 package com.openjfx.scheduler;
 
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -7,41 +11,42 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MidnightScheduler implements PomodoroScheduler {
 
     private ScheduledExecutorService midnightScheduler = Executors.newScheduledThreadPool(1);
-    private int numberOfPomodorosToday;
     private Map<LocalDate, Integer> pomodorosPerDate;
+    private static final Logger log= LogManager.getLogger(MidnightScheduler.class);
+
+    private AtomicInteger numberOfPomodorosToday;
 
     public MidnightScheduler() {
-        numberOfPomodorosToday = 0;
+        numberOfPomodorosToday=new AtomicInteger(0);
         pomodorosPerDate = new HashMap<>();
-        pomodorosPerDate.put(LocalDate.now(), numberOfPomodorosToday);
+        pomodorosPerDate.put(LocalDate.now(), numberOfPomodorosToday.intValue());
     }
 
     public void scheduleCollectionOfPomodoros() {
-        LocalTime currentTime = LocalTime.now();
-        LocalTime nextRun = LocalTime.MIDNIGHT;
+        var currentTime = LocalTime.now();
+        var nextRun = LocalTime.MIDNIGHT;
         java.time.Duration duration = java.time.Duration.between(currentTime, nextRun);
-        long initialDelay = duration.getSeconds();
+        var initialDelay = duration.getSeconds();
 
         midnightScheduler.scheduleAtFixedRate(() -> {
-                    pomodorosPerDate.put(LocalDate.now(), numberOfPomodorosToday);
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    numberOfPomodorosToday = 0;
+                    LocalDate now = LocalDate.now();
+                    pomodorosPerDate.put(now, numberOfPomodorosToday.get());
+                    log.info(numberOfPomodorosToday.get()+" pomodoros collected for "+now);
+
+                    numberOfPomodorosToday.set(0);
                 }, initialDelay, TimeUnit.DAYS.toSeconds(1),
                 TimeUnit.SECONDS);
     }
 
     @Override
     public void incrementNumberOfPomodoros() {
-        numberOfPomodorosToday++;
-        pomodorosPerDate.put(LocalDate.now(),numberOfPomodorosToday);
+        numberOfPomodorosToday.incrementAndGet();
+        pomodorosPerDate.put(LocalDate.now(),numberOfPomodorosToday.get());
     }
 
 
@@ -56,6 +61,6 @@ public class MidnightScheduler implements PomodoroScheduler {
 
     @Override
     public void resetNumberOfPomodoros() {
-        numberOfPomodorosToday=0;
+        numberOfPomodorosToday.set(0);
     }
 }

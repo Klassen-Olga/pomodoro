@@ -1,5 +1,6 @@
 package com.openjfx.timer;
 
+import com.openjfx.scheduler.MidnightScheduler;
 import com.openjfx.scheduler.PomodoroScheduler;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -7,6 +8,8 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.DatePicker;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.controlsfx.control.Notifications;
 
 import java.time.LocalDate;
@@ -20,6 +23,7 @@ public class Timer extends Pane implements PomodoroTimer {
     private final int initialSmallPauseSeconds;
     private final int initialLongPauseSeconds;
     private PomodoroScheduler pomodoroScheduler;
+    private static final Logger log = LogManager.getLogger(MidnightScheduler.class);
 
     private TimerLayout timerLayout;
 
@@ -31,11 +35,12 @@ public class Timer extends Pane implements PomodoroTimer {
         numberOfBreaks = 0;
         isCurrentRoundWork = true;
         //*60
-        initialWorkingSeconds = workingMinutes;
-        initialSmallPauseSeconds = smallPauseMinutes;
-        initialLongPauseSeconds = longPauseMinutes;
-        seconds = workingMinutes;
+        initialWorkingSeconds = workingMinutes * 60;
+        initialSmallPauseSeconds = smallPauseMinutes * 60;
+        initialLongPauseSeconds = longPauseMinutes * 60;
         //
+        seconds = initialWorkingSeconds;
+
 
         this.timerLayout = new TimerLayout(getTimeLabelValue(), getDatePicker());
         this.getChildren().addAll(timerLayout);
@@ -48,7 +53,7 @@ public class Timer extends Pane implements PomodoroTimer {
         Timeline timerTimeline =
                 new Timeline(new KeyFrame(Duration.seconds(1), (ActionEvent event) -> {
                     seconds--;
-                    System.out.println(seconds);
+                    //System.out.println(seconds);
                     timerLayout.setTimeLabelValue(getTimeLabelValue());
                 }));
 
@@ -91,7 +96,7 @@ public class Timer extends Pane implements PomodoroTimer {
     private void switchBetweenWorkAndPause() {
         if (isCurrentRoundWork) {
             pomodoroScheduler.incrementNumberOfPomodoros();
-            System.out.println("now break");
+            log.info("Break time");
             isCurrentRoundWork = false;
             numberOfBreaks++;
             seconds = numberOfBreaks >= 4 ? initialLongPauseSeconds : initialSmallPauseSeconds;
@@ -99,7 +104,7 @@ public class Timer extends Pane implements PomodoroTimer {
                 numberOfBreaks = 0;
             }
         } else {
-            System.out.println("now work");
+            log.info("Work time");
             isCurrentRoundWork = true;
             seconds = initialWorkingSeconds;
         }
@@ -107,8 +112,8 @@ public class Timer extends Pane implements PomodoroTimer {
 
     private String getTimeLabelValue() {
         String breakOrWork = isCurrentRoundWork ? "Work: " : "Break: ";
-        return breakOrWork + seconds;
-        //return breakOrWork+String.format("%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
+        //return breakOrWork + seconds;
+        return breakOrWork + String.format("%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
     }
 
     private void setNumberOfPomodorosLabelValue(int num) {
