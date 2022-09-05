@@ -61,4 +61,8 @@ public class TimerLayout extends StackPane {
     public Button getRestartButton() {
         return restartButton;
     }
+
+    public Label getTimeLabel() {
+        return timeLabel;
+    }
 }

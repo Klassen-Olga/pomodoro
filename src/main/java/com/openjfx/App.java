@@ -9,16 +9,16 @@ import javafx.stage.Stage;
 
 public class App extends Application {
 
-    final int workingMinutes=90;
-    final int smallPauseMinutes=5;
-    final int longPauseMinutes=15;
+    final int workingMinutes = 3;
+    final int smallPauseMinutes = 2;
+    final int longPauseMinutes = 5;
 
     private PomodoroScheduler midnightScheduler = new MidnightScheduler();
 
     @Override
     public void start(Stage stage) {
 
-        var timer = new Timer(workingMinutes, smallPauseMinutes, longPauseMinutes, midnightScheduler);
+        var timer = new Timer(workingMinutes, smallPauseMinutes, longPauseMinutes, Timer.Unit.SECONDS, midnightScheduler);
         timer.run();
 
         var scene = new Scene(timer);
@@ -29,7 +29,7 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 
 }

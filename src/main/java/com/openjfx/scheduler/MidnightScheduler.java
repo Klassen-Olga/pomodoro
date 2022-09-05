@@ -1,6 +1,8 @@
 package com.openjfx.scheduler;
 
 
+
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,7 +39,6 @@ public class MidnightScheduler implements PomodoroScheduler {
                     LocalDate now = LocalDate.now();
                     pomodorosPerDate.put(now, numberOfPomodorosToday.get());
                     log.info(numberOfPomodorosToday.get()+" pomodoros collected for "+now);
-
                     numberOfPomodorosToday.set(0);
                 }, initialDelay, TimeUnit.DAYS.toSeconds(1),
                 TimeUnit.SECONDS);

@@ -26,19 +26,29 @@ public class Timer extends Pane implements PomodoroTimer {
     private static final Logger log = LogManager.getLogger(MidnightScheduler.class);
 
     private TimerLayout timerLayout;
+    private Timeline timerTimeline;
 
 
-    public Timer(int workingMinutes, int smallPauseMinutes, int longPauseMinutes,
+    public enum Unit {
+        SECONDS, MINUTES
+    }
+
+    public Timer(int workingUnits, int smallPause, int longPause, Timer.Unit unit,
                  PomodoroScheduler pomodoroScheduler) {
 
         this.pomodoroScheduler = pomodoroScheduler;
         numberOfBreaks = 0;
         isCurrentRoundWork = true;
-        //*60
-        initialWorkingSeconds = workingMinutes * 60;
-        initialSmallPauseSeconds = smallPauseMinutes * 60;
-        initialLongPauseSeconds = longPauseMinutes * 60;
-        //
+        if (unit.equals(Unit.MINUTES)) {
+            initialWorkingSeconds = workingUnits * 60;
+            initialSmallPauseSeconds = smallPause * 60;
+            initialLongPauseSeconds = longPause * 60;
+
+        } else {
+            initialWorkingSeconds = workingUnits;
+            initialSmallPauseSeconds = smallPause;
+            initialLongPauseSeconds = longPause;
+        }
         seconds = initialWorkingSeconds;
 
 
@@ -50,7 +60,7 @@ public class Timer extends Pane implements PomodoroTimer {
 
         pomodoroScheduler.scheduleCollectionOfPomodoros();
 
-        Timeline timerTimeline =
+        timerTimeline =
                 new Timeline(new KeyFrame(Duration.seconds(1), (ActionEvent event) -> {
                     seconds--;
                     //System.out.println(seconds);
@@ -112,7 +122,6 @@ public class Timer extends Pane implements PomodoroTimer {
 
     private String getTimeLabelValue() {
         String breakOrWork = isCurrentRoundWork ? "Work: " : "Break: ";
-        //return breakOrWork + seconds;
         return breakOrWork + String.format("%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
     }
 
@@ -121,21 +130,37 @@ public class Timer extends Pane implements PomodoroTimer {
     }
 
     private void setListenersOnButtons(Timeline timerTimeline) {
-        timerLayout.getStartButton().setOnAction(actionEvent -> timerTimeline.play());
-        timerLayout.getPauseButton().setOnAction(actionEvent -> timerTimeline.stop());
-        timerLayout.getRestartButton().setOnAction(actionEvent -> {
-
-            timerTimeline.stop();
-
-            seconds = initialWorkingSeconds;
-            isCurrentRoundWork = true;
-            numberOfBreaks = 0;
-
-            pomodoroScheduler.resetNumberOfPomodoros();
-            timerLayout.setTimeLabelValue(getTimeLabelValue());
-            timerTimeline.setCycleCount(seconds);
-            timerTimeline.play();
-        });
+        timerLayout.getStartButton().setOnAction(actionEvent -> startButtonAction(timerTimeline));
+        timerLayout.getPauseButton().setOnAction(actionEvent -> pauseButtonAction(timerTimeline));
+        timerLayout.getRestartButton().setOnAction(actionEvent -> resetButtonAction(timerTimeline));
     }
 
+    public void resetButtonAction(Timeline timerTimeline) {
+        timerTimeline.stop();
+
+        seconds = initialWorkingSeconds;
+        isCurrentRoundWork = true;
+        numberOfBreaks = 0;
+
+        pomodoroScheduler.resetNumberOfPomodoros();
+        timerLayout.setTimeLabelValue(getTimeLabelValue());
+        timerTimeline.setCycleCount(seconds);
+        timerTimeline.play();
+    }
+
+    public void pauseButtonAction(Timeline timerTimeline) {
+        timerTimeline.stop();
+    }
+
+    public void startButtonAction(Timeline timerTimeline) {
+        timerTimeline.play();
+    }
+
+    public TimerLayout getTimerLayout() {
+        return timerLayout;
+    }
+
+    public Timeline getTimerTimeline() {
+        return timerTimeline;
+    }
 }
