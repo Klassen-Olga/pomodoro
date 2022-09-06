@@ -6,25 +6,29 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.scene.control.DatePicker;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.controlsfx.control.Notifications;
 
 import java.time.LocalDate;
+/**
+ * Implementation of a PomodoroTimer, which fires working and break timer and notifies the user
+ * whenever he should work or take a break
+ */
+public class Timer extends StackPane implements PomodoroTimer {
+    private static final Logger log = LogManager.getLogger(MidnightScheduler.class);
 
-public class Timer extends Pane implements PomodoroTimer {
-
-    private int seconds;
     private boolean isCurrentRoundWork;
     private int numberOfBreaks;
+
+    private int seconds;
     private final int initialWorkingSeconds;
     private final int initialSmallPauseSeconds;
     private final int initialLongPauseSeconds;
-    private PomodoroScheduler pomodoroScheduler;
-    private static final Logger log = LogManager.getLogger(MidnightScheduler.class);
 
+    private PomodoroScheduler pomodoroScheduler;
     private TimerLayout timerLayout;
     private Timeline timerTimeline;
 
@@ -33,12 +37,20 @@ public class Timer extends Pane implements PomodoroTimer {
         SECONDS, MINUTES
     }
 
+    /**
+     * @param workingUnits can be either seconds or minutes
+     * @param smallPause can be either seconds or minutes
+     * @param longPause can be either seconds or minutes
+     * @param unit if minutes will be transformed into seconds
+     * @param pomodoroScheduler scheduler, which collects the number of tasks at certain point of day
+     */
     public Timer(int workingUnits, int smallPause, int longPause, Timer.Unit unit,
                  PomodoroScheduler pomodoroScheduler) {
 
         this.pomodoroScheduler = pomodoroScheduler;
         numberOfBreaks = 0;
         isCurrentRoundWork = true;
+
         if (unit.equals(Unit.MINUTES)) {
             initialWorkingSeconds = workingUnits * 60;
             initialSmallPauseSeconds = smallPause * 60;
@@ -56,17 +68,17 @@ public class Timer extends Pane implements PomodoroTimer {
         this.getChildren().addAll(timerLayout);
     }
 
+    /**
+     * Main method of timer, should be called in the App class
+     */
     public void run() {
-
         pomodoroScheduler.scheduleCollectionOfPomodoros();
 
         timerTimeline =
                 new Timeline(new KeyFrame(Duration.seconds(1), (ActionEvent event) -> {
                     seconds--;
-                    //System.out.println(seconds);
                     timerLayout.setTimeLabelValue(getTimeLabelValue());
                 }));
-
         timerTimeline.setCycleCount(seconds);
 
         timerTimeline.setOnFinished(actionEvent -> {
@@ -76,7 +88,6 @@ public class Timer extends Pane implements PomodoroTimer {
             timerTimeline.play();
 
         });
-
         setListenersOnButtons(timerTimeline);
     }
 
@@ -98,7 +109,6 @@ public class Timer extends Pane implements PomodoroTimer {
             setNumberOfPomodorosLabelValue(numberOfPomodoros);
 
         });
-
         return datePicker;
     }
 
@@ -141,9 +151,9 @@ public class Timer extends Pane implements PomodoroTimer {
         seconds = initialWorkingSeconds;
         isCurrentRoundWork = true;
         numberOfBreaks = 0;
-
         pomodoroScheduler.resetNumberOfPomodoros();
         timerLayout.setTimeLabelValue(getTimeLabelValue());
+
         timerTimeline.setCycleCount(seconds);
         timerTimeline.play();
     }

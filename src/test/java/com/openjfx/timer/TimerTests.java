@@ -1,9 +1,7 @@
-package com.openjfx;
+package com.openjfx.timer;
 
 import com.openjfx.scheduler.MidnightScheduler;
 import com.openjfx.scheduler.PomodoroScheduler;
-import com.openjfx.timer.Timer;
-import com.openjfx.timer.TimerLayout;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.scene.Scene;

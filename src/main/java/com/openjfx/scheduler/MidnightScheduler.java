@@ -1,8 +1,6 @@
 package com.openjfx.scheduler;
 
 
-
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,16 +13,19 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Implementation of PomodoroScheduler, which collects pomodoros every day at midnight
+ * and saves it in a hashmap, which can be accessed later in the ui
+ */
 public class MidnightScheduler implements PomodoroScheduler {
+    private static final Logger log = LogManager.getLogger(MidnightScheduler.class);
 
     private ScheduledExecutorService midnightScheduler = Executors.newScheduledThreadPool(1);
     private Map<LocalDate, Integer> pomodorosPerDate;
-    private static final Logger log= LogManager.getLogger(MidnightScheduler.class);
-
     private AtomicInteger numberOfPomodorosToday;
 
     public MidnightScheduler() {
-        numberOfPomodorosToday=new AtomicInteger(0);
+        numberOfPomodorosToday = new AtomicInteger(0);
         pomodorosPerDate = new HashMap<>();
         pomodorosPerDate.put(LocalDate.now(), numberOfPomodorosToday.intValue());
     }
@@ -38,7 +39,7 @@ public class MidnightScheduler implements PomodoroScheduler {
         midnightScheduler.scheduleAtFixedRate(() -> {
                     LocalDate now = LocalDate.now();
                     pomodorosPerDate.put(now, numberOfPomodorosToday.get());
-                    log.info(numberOfPomodorosToday.get()+" pomodoros collected for "+now);
+                    log.info(numberOfPomodorosToday.get() + " pomodoros collected for " + now);
                     numberOfPomodorosToday.set(0);
                 }, initialDelay, TimeUnit.DAYS.toSeconds(1),
                 TimeUnit.SECONDS);
@@ -47,7 +48,7 @@ public class MidnightScheduler implements PomodoroScheduler {
     @Override
     public void incrementNumberOfPomodoros() {
         numberOfPomodorosToday.incrementAndGet();
-        pomodorosPerDate.put(LocalDate.now(),numberOfPomodorosToday.get());
+        pomodorosPerDate.put(LocalDate.now(), numberOfPomodorosToday.get());
     }
 
 
